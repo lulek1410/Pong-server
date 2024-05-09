@@ -1,6 +1,7 @@
 import express, { NextFunction, Request, Response } from "express";
 import { HttpError } from "./utils/HttpError";
 import mongoose from "mongoose";
+import { usersRouter } from "./routes/users";
 
 const app = express();
 
@@ -18,9 +19,11 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-app.get("/", (req: Request, res: Response, next: NextFunction) =>
+app.get("/api", (req: Request, res: Response, next: NextFunction) =>
   res.send("It works")
 );
+
+app.use("/api/users", usersRouter);
 
 app.use((req: Request, res: Response, next: NextFunction) => {
   throw new HttpError("Path not found", 404);
