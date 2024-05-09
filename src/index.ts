@@ -1,5 +1,6 @@
 import express, { NextFunction, Request, Response } from "express";
 import { HttpError } from "./utils/HttpError";
+import mongoose from "mongoose";
 
 const app = express();
 
@@ -34,6 +35,13 @@ app.use((error: HttpError, req: Request, res: Response, next: NextFunction) => {
     .json({ message: error.message || "An unknown error occured" });
 });
 
-app.listen(5000, () => {
-  console.log("server listens at 5000");
-});
+mongoose
+  .connect(
+    `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.7tr11tj.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority&appName=Cluster0`
+  )
+  .then(() =>
+    app.listen(5000, () => {
+      console.log("server listens at 5000");
+    })
+  )
+  .catch((err) => console.log(err));
