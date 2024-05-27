@@ -71,5 +71,5 @@ export const registerUser = async (
     );
   }
 
-  res.status(200).json({ userId: newUser.id, name: newUser.name });
+  res.status(200).json({ id: newUser.id, name: newUser.name });
 };
