@@ -1,12 +1,17 @@
 import { Router } from "express";
 import multer from "multer";
-import { getUsers, registerUser } from "../controllers/users";
+import { getUsers, loginUser, registerUser } from "../controllers/users";
+import { check } from "express-validator";
 
 export const usersRouter = Router();
 const upload = multer();
 
-usersRouter.use(upload.none());
-
 usersRouter.get("/", getUsers);
 
-usersRouter.post("/register", registerUser);
+usersRouter.use(upload.none(), [
+  check("email").isEmail(),
+  check("password").isLength({ min: 6 }),
+]);
+
+usersRouter.post("/register", [check("name").notEmpty()], registerUser);
+usersRouter.post("/login", loginUser);

@@ -47,10 +47,8 @@ export const registerUser = async (
 
   let hashedPassword;
   try {
-    console.log(userData);
     hashedPassword = await bcrypt.hash(userData.password, 12);
   } catch (e) {
-    console.log(e);
     return next(
       new HttpError("User creation failed. Please try again later.", 500)
     );
@@ -65,11 +63,50 @@ export const registerUser = async (
   try {
     await newUser.save();
   } catch (e) {
-    console.log(e);
     return next(
       new HttpError("Could not save the new user. Please try again later.", 500)
     );
   }
 
-  res.status(200).json({ id: newUser.id, name: newUser.name });
+  res
+    .status(200)
+    .json({ id: newUser.id, name: newUser.name, email: newUser.email });
+};
+
+export const loginUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return next(
+      new HttpError("Invalid input passed, please check your data", 422)
+    );
+  }
+
+  const userData: IUser = req.body;
+  let user: IUser;
+  try {
+    user = await User.findOne({
+      email: userData.email,
+    });
+  } catch (e) {
+    return next(new HttpError("Login failed. Invalid credentials.", 500));
+  }
+  if (!user) {
+    return next(new HttpError("Email or password invalid", 400));
+  }
+
+  let isPasswordValid;
+  try {
+    isPasswordValid = await bcrypt.compare(userData.password, user.password);
+  } catch (e) {
+    return next(new HttpError("Login failed. Please try again later.", 500));
+  }
+  if (!isPasswordValid) {
+    return next(new HttpError("Email or password invalid", 400));
+  }
+
+  res.status(200).json({ id: user.id, name: user.name, email: user.email });
 };
