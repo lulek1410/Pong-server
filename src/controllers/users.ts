@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { validationResult } from "express-validator";
 import bcrypt from "bcryptjs/dist/bcrypt.js";
+import jwt from "jsonwebtoken";
 
 import { IUser, User } from "../models/User";
 
@@ -60,6 +61,21 @@ export const registerUser = async (
     friends: [],
   });
 
+  let token;
+  try {
+    token = jwt.sign(
+      { is: newUser.id, email: newUser.email },
+      process.env.JWT_KEY,
+      {
+        expiresIn: "24h",
+      }
+    );
+  } catch (e) {
+    return next(
+      new HttpError("Token creation failed, please try again later.", 500)
+    );
+  }
+
   try {
     await newUser.save();
   } catch (e) {
@@ -70,7 +86,7 @@ export const registerUser = async (
 
   res
     .status(200)
-    .json({ id: newUser.id, name: newUser.name, email: newUser.email });
+    .json({ id: newUser.id, name: newUser.name, email: newUser.email, token });
 };
 
 export const loginUser = async (
@@ -108,5 +124,18 @@ export const loginUser = async (
     return next(new HttpError("Email or password invalid", 400));
   }
 
-  res.status(200).json({ id: user.id, name: user.name, email: user.email });
+  let token;
+  try {
+    token = jwt.sign({ is: user.id, email: user.email }, process.env.JWT_KEY, {
+      expiresIn: "24h",
+    });
+  } catch (e) {
+    return next(
+      new HttpError("Token creation failed, please try again later.", 500)
+    );
+  }
+
+  res
+    .status(200)
+    .json({ id: user.id, name: user.name, email: user.email, token });
 };
