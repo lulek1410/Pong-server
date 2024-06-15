@@ -2,8 +2,22 @@ import express, { NextFunction, Request, Response } from "express";
 import { HttpError } from "./utils/HttpError";
 import mongoose from "mongoose";
 import { usersRouter } from "./routes/users";
+import { WebSocketServer } from "ws";
+import { createServer } from "http";
 
 const app = express();
+const server = createServer(app);
+const wss = new WebSocketServer({ server });
+
+wss.on("connection", (ws) => {
+  console.log("new client connected");
+  ws.send("Welcome new client");
+
+  ws.on("message", (message) => {
+    console.log("received", message);
+    ws.send("Got a new message: " + message);
+  });
+});
 
 app.use(express.json());
 
