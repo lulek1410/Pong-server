@@ -1,27 +1,32 @@
 import express, { NextFunction, Request, Response } from "express";
-import { HttpError } from "./utils/HttpError";
-import mongoose from "mongoose";
-import { usersRouter } from "./routes/users";
-import { WebSocketServer } from "ws";
 import { createServer } from "http";
+import mongoose from "mongoose";
+import WebSocket, { WebSocketServer } from "ws";
+import { usersRouter } from "./routes/users";
+import { HttpError } from "./utils/HttpError";
 
 const app = express();
 const server = createServer(app);
 const wss = new WebSocketServer({ server });
-
 wss.on("connection", (ws) => {
   console.log("new client connected");
   ws.send("Welcome new client");
 
-  ws.on("message", (message) => {
-    console.log("received", message);
-    ws.send("Got a new message: " + message);
+  ws.on("message", (message: WebSocket.Data) => {
+    console.log("received", message.toString());
+    ws.send("Got a new message: " + message.toString());
+  });
+
+  ws.on("error", (error) => {
+    console.error("WebSocket error:", error);
+  });
+
+  ws.on("close", () => {
+    console.log("server close ws");
   });
 });
 
 app.use(express.json());
-
-var port = 5000;
 
 app.use((req: Request, res: Response, next: NextFunction) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -57,7 +62,7 @@ mongoose
     `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.7tr11tj.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority&appName=Cluster0`
   )
   .then(() =>
-    app.listen(5000, () => {
+    server.listen(5000, () => {
       console.log("server listens at 5000");
     })
   )
