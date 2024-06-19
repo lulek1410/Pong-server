@@ -14,25 +14,18 @@ interface JoinMessage {
 type Message = JoinMessage | ConnectionMessage;
 
 const maxClients = 2;
-let rooms = {};
+let rooms: { [key: string]: [WebSocket] } = {};
 
 const sendInformation = (ws: WebSocket) => {
   let obj;
   if (ws["room"])
     obj = {
       type: "info",
-      params: {
-        room: ws["room"],
-        clientsNumber: rooms[ws["room"]].length,
-      },
+      params: { room: ws["room"], clientsNumber: rooms[ws["room"]].length },
     };
-  else
-    obj = {
-      type: "info",
-      params: {
-        room: "no room",
-      },
-    };
+  else if (rooms[ws["room"]])
+    obj = { type: "info", params: { room: "room full" } };
+  else obj = { type: "info", params: { room: "no room" } };
 
   ws.send(JSON.stringify(obj));
 };
@@ -73,8 +66,18 @@ export const configureWss = (server: Server) => {
       sendInformation(ws);
     };
 
-    const join = (code) => {
-      
+    const join = (code: string) => {
+      if (!Object.keys(rooms).includes(code)) {
+        console.warn(`Room with code: ${code} does not exist`);
+        return;
+      }
+      if (rooms[code].length >= maxClients) {
+        console.warn(`Room with code: ${code} is full`);
+        return;
+      }
+      rooms[code].push(ws);
+      ws["room"] = code;
+      sendInformation(ws);
     };
 
     const leave = () => {};
