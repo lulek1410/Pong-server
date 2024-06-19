@@ -4,27 +4,11 @@ import mongoose from "mongoose";
 import WebSocket, { WebSocketServer } from "ws";
 import { usersRouter } from "./routes/users";
 import { HttpError } from "./utils/HttpError";
+import { configureWss } from "./wss";
 
 const app = express();
 const server = createServer(app);
-const wss = new WebSocketServer({ server });
-wss.on("connection", (ws) => {
-  console.log("new client connected");
-  ws.send("Welcome new client");
-
-  ws.on("message", (message: WebSocket.Data) => {
-    console.log("received", message.toString());
-    ws.send("Got a new message: " + message.toString());
-  });
-
-  ws.on("error", (error) => {
-    console.error("WebSocket error:", error);
-  });
-
-  ws.on("close", () => {
-    console.log("server close ws");
-  });
-});
+configureWss(server);
 
 app.use(express.json());
 
