@@ -1,17 +1,28 @@
 import { Server } from "http";
 import WebSocket, { WebSocketServer } from "ws";
 import { v4 } from "uuid";
+import { inherits } from "util";
 
-interface ConnectionMessage {
-  type: "leave" | "create";
+interface LeaveMessage {
+  type: "leave" | "search" | "create";
+}
+
+interface JoinParams {
+  code: string;
+  userId: string;
 }
 
 interface JoinMessage {
   type: "join";
-  params: { code: string };
+  params: JoinParams;
 }
 
-type Message = JoinMessage | ConnectionMessage;
+interface InitMessage {
+  type: "init";
+  params: { userId: string };
+}
+
+type Message = JoinMessage | LeaveMessage | InitMessage;
 
 const maxClients = 2;
 let rooms: { [key: string]: WebSocket[] } = {};
@@ -20,12 +31,15 @@ const sendInformation = (ws: WebSocket) => {
   let obj;
   if (ws["room"])
     obj = {
-      type: "info",
-      params: { room: ws["room"], clientsNumber: rooms[ws["room"]].length },
+      type: "connected",
+      params: {
+        room: ws["room"],
+        userIds: rooms[ws["room"]].map((client) => client["userId"]),
+      },
     };
   else if (rooms[ws["room"]])
-    obj = { type: "info", params: { room: "room full" } };
-  else obj = { type: "info", params: { room: "no room" } };
+    obj = { type: "full", params: { room: "room full" } };
+  else obj = { type: "error", params: { room: "no room" } };
 
   ws.send(JSON.stringify(obj));
 };
@@ -47,6 +61,12 @@ export const configureWss = (server: Server) => {
           break;
         case "leave":
           leave();
+          break;
+        case "search":
+          search();
+          break;
+        case "init":
+          init(msg.params.userId);
           break;
       }
     });
@@ -87,6 +107,24 @@ export const configureWss = (server: Server) => {
       if (rooms[room].length === 0) {
         delete rooms[room];
       }
+    };
+
+    const search = () => {
+      const result = Object.entries(rooms).find(
+        ([key, value]) => value.length < maxClients
+      );
+      if (result) {
+        const [key, value] = result;
+        rooms[key].push(ws);
+        ws["room"] = key;
+        sendInformation(ws);
+      } else {
+        create();
+      }
+    };
+
+    const init = (userId: string) => {
+      ws["userId"] = userId;
     };
   });
 };
