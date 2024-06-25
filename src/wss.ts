@@ -1,9 +1,8 @@
 import { Server } from "http";
-import WebSocket, { WebSocketServer } from "ws";
 import { v4 } from "uuid";
-import { inherits } from "util";
+import WebSocket, { WebSocketServer } from "ws";
 
-interface LeaveMessage {
+interface BasicMessage {
   type: "leave" | "search" | "create";
 }
 
@@ -22,7 +21,7 @@ interface InitMessage {
   params: { userId: string };
 }
 
-type Message = JoinMessage | LeaveMessage | InitMessage;
+type Message = JoinMessage | BasicMessage | InitMessage;
 
 const maxClients = 2;
 let rooms: { [key: string]: WebSocket[] } = {};
