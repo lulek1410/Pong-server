@@ -18,7 +18,7 @@ interface JoinMessage {
 
 interface InitMessage {
   type: "init";
-  params: { userId: string };
+  params: { userId: string | null };
 }
 
 type Message = JoinMessage | BasicMessage | InitMessage;
@@ -47,10 +47,10 @@ export const configureWss = (server: Server) => {
   const wss = new WebSocketServer({ server });
   wss.on("connection", (ws) => {
     console.log("new client connected");
-    ws.send("Welcome new client");
 
     ws.on("message", (message: WebSocket.Data) => {
       const msg: Message = JSON.parse(message.toString());
+      console.log(msg);
       switch (msg.type) {
         case "join":
           join(msg.params.code);
@@ -75,6 +75,10 @@ export const configureWss = (server: Server) => {
     });
 
     ws.on("close", () => {
+      const interval = ws["searchInterval"];
+      if (interval) {
+        clearInterval(interval);
+      }
       console.log("server close ws");
     });
 
@@ -82,7 +86,14 @@ export const configureWss = (server: Server) => {
       const room = v4();
       rooms[room] = [ws];
       ws["room"] = room;
-      sendInformation(ws);
+      ws.send(
+        JSON.stringify({
+          type: "created",
+          params: {
+            roomId: room,
+          },
+        })
+      );
     };
 
     const join = (code: string) => {
@@ -101,29 +112,51 @@ export const configureWss = (server: Server) => {
 
     const leave = () => {
       const room = ws["room"];
-      rooms[room] = rooms[room].filter((client) => client !== ws);
-      ws["room"] = undefined;
-      if (rooms[room].length === 0) {
-        delete rooms[room];
+      if (room) {
+        rooms[room] = rooms[room].filter((client) => client !== ws);
+        ws["room"] = undefined;
+        if (rooms[room].length === 0) {
+          delete rooms[room];
+        }
       }
     };
 
     const search = () => {
-      const result = Object.entries(rooms).find(
-        ([key, value]) => value.length < maxClients
-      );
-      if (result) {
-        const [key, value] = result;
-        rooms[key].push(ws);
-        ws["room"] = key;
-        sendInformation(ws);
-      } else {
-        create();
-      }
+      const startTime = Date.now();
+      const maxSearchTime = 5 * 1000;
+      const intervalTime = 1000;
+      const searchInterval = setInterval(() => {
+        const elapsedTime = Date.now() - startTime;
+        if (elapsedTime > maxSearchTime) {
+          clearInterval(searchInterval);
+          create();
+          return;
+        }
+        const result = Object.entries(rooms).find(
+          ([key, value]) => value.length < maxClients
+        );
+        if (result) {
+          clearInterval(searchInterval);
+          const [key, value] = result;
+          rooms[key].push(ws);
+          ws["room"] = key;
+          ws.send(
+            JSON.stringify({
+              type: "joined",
+              params: {
+                roomId: key,
+                otherPlayer: { userId: rooms[key][0]["userId"] },
+              },
+            })
+          );
+        }
+      }, intervalTime);
+      ws["searchInterval"] = searchInterval;
     };
 
-    const init = (userId: string) => {
+    const init = (userId: string | null) => {
       ws["userId"] = userId;
+      ws.send(JSON.stringify({ type: "initialized" }));
     };
   });
 };
