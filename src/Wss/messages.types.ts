@@ -4,7 +4,7 @@ export interface BasicMessage {
 
 export interface JoinParams {
   code: string;
-  userId: string;
+  id: string;
 }
 
 export interface JoinMessage {
@@ -14,7 +14,7 @@ export interface JoinMessage {
 
 export interface InitMessage {
   type: "init";
-  params: { userId: string | null };
+  params: { id: string | null };
 }
 
 export type Message = JoinMessage | BasicMessage | InitMessage;

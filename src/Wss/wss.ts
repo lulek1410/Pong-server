@@ -29,7 +29,7 @@ export const configureWss = (server: Server) => {
           search();
           break;
         case "init":
-          init(msg.params.userId);
+          init(msg.params.id);
           break;
       }
     });
@@ -86,7 +86,7 @@ export const configureWss = (server: Server) => {
           type: "joined",
           params: {
             roomId: code,
-            otherPlayer: { userId: rooms[code][0]["userId"] },
+            otherPlayer: { id: rooms[code][0]["id"] },
           },
         })
       );
@@ -127,7 +127,7 @@ export const configureWss = (server: Server) => {
               type: "joined",
               params: {
                 roomId: key,
-                otherPlayer: { userId: rooms[key][0]["userId"] },
+                otherPlayer: { id: rooms[key][0]["id"] },
               },
             })
           );
@@ -136,8 +136,8 @@ export const configureWss = (server: Server) => {
       ws["searchInterval"] = searchInterval;
     };
 
-    const init = (userId: string | null) => {
-      ws["userId"] = userId;
+    const init = (id: string | null) => {
+      ws["id"] = id;
       ws.send(JSON.stringify({ type: "initialized" }));
     };
   });
