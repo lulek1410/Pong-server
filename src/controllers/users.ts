@@ -23,6 +23,26 @@ export const getUsers = async (
   res.status(200).json(users.map((user) => user.toObject({ getters: true })));
 };
 
+export const getUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  let user;
+  try {
+    user = await User.findById(req.params.id).select("-password");
+    if (!user) {
+      return next(new HttpError("User not found", 404));
+    }
+  } catch (err) {
+    return next(
+      new HttpError("Fetching user failed, please try again later.", 500)
+    );
+  }
+
+  res.status(200).json(user.toObject({ getters: true }));
+};
+
 export const registerUser = async (
   req: Request,
   res: Response,
