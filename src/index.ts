@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import WebSocket, { WebSocketServer } from "ws";
 import { usersRouter } from "./routes/users";
 import { HttpError } from "./utils/HttpError";
-import { configureWss } from "./wss";
+import { configureWss } from "./Wss/wss";
 
 const app = express();
 const server = createServer(app);

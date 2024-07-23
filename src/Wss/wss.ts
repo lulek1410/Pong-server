@@ -2,46 +2,10 @@ import { Server } from "http";
 import { v4 } from "uuid";
 import WebSocket, { WebSocketServer } from "ws";
 
-interface BasicMessage {
-  type: "leave" | "search" | "create";
-}
-
-interface JoinParams {
-  code: string;
-  userId: string;
-}
-
-interface JoinMessage {
-  type: "join";
-  params: JoinParams;
-}
-
-interface InitMessage {
-  type: "init";
-  params: { userId: string | null };
-}
-
-type Message = JoinMessage | BasicMessage | InitMessage;
+import { Message } from "./messages.types";
 
 const maxClients = 2;
 let rooms: { [key: string]: WebSocket[] } = {};
-
-const sendInformation = (ws: WebSocket) => {
-  let obj;
-  if (ws["room"])
-    obj = {
-      type: "connected",
-      params: {
-        room: ws["room"],
-        userIds: rooms[ws["room"]].map((client) => client["userId"]),
-      },
-    };
-  else if (rooms[ws["room"]])
-    obj = { type: "full", params: { room: "room full" } };
-  else obj = { type: "error", params: { room: "no room" } };
-
-  ws.send(JSON.stringify(obj));
-};
 
 export const configureWss = (server: Server) => {
   const wss = new WebSocketServer({ server });
@@ -98,16 +62,34 @@ export const configureWss = (server: Server) => {
 
     const join = (code: string) => {
       if (!Object.keys(rooms).includes(code)) {
-        console.warn(`Room with code: ${code} does not exist`);
+        ws.send(
+          JSON.stringify({
+            type: "error",
+            params: { error: `Room with code: ${code} does not exist` },
+          })
+        );
         return;
       }
       if (rooms[code].length >= maxClients) {
-        console.warn(`Room with code: ${code} is full`);
+        ws.send(
+          JSON.stringify({
+            type: "error",
+            params: { error: `Room with code: ${code} is full` },
+          })
+        );
         return;
       }
       rooms[code].push(ws);
       ws["room"] = code;
-      sendInformation(ws);
+      ws.send(
+        JSON.stringify({
+          type: "joined",
+          params: {
+            roomId: code,
+            otherPlayer: { userId: rooms[code][0]["userId"] },
+          },
+        })
+      );
     };
 
     const leave = () => {
