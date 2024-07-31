@@ -7,7 +7,7 @@ import {
   getCreatedMessage,
   getErrorMessage,
   getJoinedMessage,
-  getOtherPlayerJoinedMessage
+  getOtherPlayerJoinedMessage,
 } from "./messageHandlers";
 import { ReqMessage } from "./messages.request.types";
 
@@ -44,10 +44,7 @@ export const configureWss = (server: Server) => {
     });
 
     ws.on("close", () => {
-      const interval = ws["searchInterval"];
-      if (interval) {
-        clearInterval(interval);
-      }
+      clearSearchInterval();
       console.log("server close ws");
     });
 
@@ -75,6 +72,7 @@ export const configureWss = (server: Server) => {
 
     const leave = () => {
       const room = ws["room"];
+      clearSearchInterval();
       if (room) {
         rooms[room] = rooms[room].filter((client) => client !== ws);
         ws["room"] = undefined;
@@ -115,6 +113,13 @@ export const configureWss = (server: Server) => {
     const init = (id: string | null) => {
       ws["id"] = id;
       ws.send(getBasicMessage("initialized"));
+    };
+
+    const clearSearchInterval = () => {
+      const interval = ws["searchInterval"];
+      if (interval) {
+        clearInterval(interval);
+      }
     };
   });
 };
