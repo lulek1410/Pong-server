@@ -1,7 +1,3 @@
-export interface InitializedMsg {
-  type: "initialized";
-}
-
 export interface JoinedMsg {
   type: "joined";
   params: { roomId: string; otherPlayer: { id: string | null } };
@@ -21,3 +17,5 @@ export interface ErrorMsg {
   type: "error";
   params: { error: string };
 }
+
+export type BasicRequestMsgType = "otherPlayerLeft" | "initialized";

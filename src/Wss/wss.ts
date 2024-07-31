@@ -2,13 +2,14 @@ import { Server } from "http";
 import { v4 } from "uuid";
 import WebSocket, { WebSocketServer } from "ws";
 
-import { ReqMessage } from "./messages.request.types";
 import {
+  getBasicMessage,
   getCreatedMessage,
   getErrorMessage,
   getJoinedMessage,
-  getOtherPlayerJoinedMessage,
+  getOtherPlayerJoinedMessage
 } from "./messageHandlers";
+import { ReqMessage } from "./messages.request.types";
 
 const maxClients = 2;
 let rooms: { [key: string]: WebSocket[] } = {};
@@ -16,8 +17,6 @@ let rooms: { [key: string]: WebSocket[] } = {};
 export const configureWss = (server: Server) => {
   const wss = new WebSocketServer({ server });
   wss.on("connection", (ws) => {
-    console.log("new client connected");
-
     ws.on("message", (message: WebSocket.Data) => {
       const msg: ReqMessage = JSON.parse(message.toString());
       console.log(msg);
@@ -81,6 +80,8 @@ export const configureWss = (server: Server) => {
         ws["room"] = undefined;
         if (rooms[room].length === 0) {
           delete rooms[room];
+        } else {
+          rooms[room][0].send(getBasicMessage("otherPlayerLeft"));
         }
       }
     };
@@ -113,7 +114,7 @@ export const configureWss = (server: Server) => {
 
     const init = (id: string | null) => {
       ws["id"] = id;
-      ws.send(JSON.stringify({ type: "initialized" }));
+      ws.send(getBasicMessage("initialized"));
     };
   });
 };

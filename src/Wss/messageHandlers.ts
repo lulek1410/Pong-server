@@ -1,4 +1,5 @@
 import {
+  BasicRequestMsgType,
   CreatedMsg,
   ErrorMsg,
   JoinedMsg,
@@ -43,3 +44,6 @@ export const getJoinedMessage = (roomId: string, playerId: string) => {
   };
   return JSON.stringify(msg);
 };
+
+export const getBasicMessage = (type: BasicRequestMsgType) =>
+  JSON.stringify({ type });
