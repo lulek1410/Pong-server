@@ -2,7 +2,13 @@ import { Server } from "http";
 import { v4 } from "uuid";
 import WebSocket, { WebSocketServer } from "ws";
 
-import { Message } from "./messages.types";
+import { ReqMessage } from "./messages.request.types";
+import {
+  getCreatedMessage,
+  getErrorMessage,
+  getJoinedMessage,
+  getOtherPlayerJoinedMessage,
+} from "./messageHandlers";
 
 const maxClients = 2;
 let rooms: { [key: string]: WebSocket[] } = {};
@@ -13,7 +19,7 @@ export const configureWss = (server: Server) => {
     console.log("new client connected");
 
     ws.on("message", (message: WebSocket.Data) => {
-      const msg: Message = JSON.parse(message.toString());
+      const msg: ReqMessage = JSON.parse(message.toString());
       console.log(msg);
       switch (msg.type) {
         case "join":
@@ -50,46 +56,22 @@ export const configureWss = (server: Server) => {
       const room = v4();
       rooms[room] = [ws];
       ws["room"] = room;
-      ws.send(
-        JSON.stringify({
-          type: "created",
-          params: {
-            roomId: room,
-          },
-        })
-      );
+      ws.send(getCreatedMessage(room));
     };
 
     const join = (code: string) => {
       if (!Object.keys(rooms).includes(code)) {
-        ws.send(
-          JSON.stringify({
-            type: "error",
-            params: { error: `Room with code: ${code} does not exist` },
-          })
-        );
+        ws.send(getErrorMessage(`Room with code: ${code} does not exist`));
         return;
       }
       if (rooms[code].length >= maxClients) {
-        ws.send(
-          JSON.stringify({
-            type: "error",
-            params: { error: `Room with code: ${code} is full` },
-          })
-        );
+        ws.send(getErrorMessage(`Room with code: ${code} is full`));
         return;
       }
       rooms[code].push(ws);
+      rooms[code][0].send(getOtherPlayerJoinedMessage(ws["id"]));
       ws["room"] = code;
-      ws.send(
-        JSON.stringify({
-          type: "joined",
-          params: {
-            roomId: code,
-            otherPlayer: { id: rooms[code][0]["id"] },
-          },
-        })
-      );
+      ws.send(getJoinedMessage(code, rooms[code][0]["id"]));
     };
 
     const leave = () => {
@@ -121,16 +103,9 @@ export const configureWss = (server: Server) => {
           clearInterval(searchInterval);
           const [key, value] = result;
           rooms[key].push(ws);
+          rooms[key][0].send(getOtherPlayerJoinedMessage(ws["id"]));
           ws["room"] = key;
-          ws.send(
-            JSON.stringify({
-              type: "joined",
-              params: {
-                roomId: key,
-                otherPlayer: { id: rooms[key][0]["id"] },
-              },
-            })
-          );
+          ws.send(getJoinedMessage(key, rooms[key][0]["id"]));
         }
       }, intervalTime);
       ws["searchInterval"] = searchInterval;
