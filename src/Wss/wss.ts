@@ -4,6 +4,7 @@ import WebSocket, { WebSocketServer } from "ws";
 
 import {
   getBasicMessage,
+  getCountdownMessage,
   getCreatedMessage,
   getErrorMessage,
   getJoinedMessage,
@@ -36,6 +37,11 @@ export const configureWss = (server: Server) => {
         case "init":
           init(msg.params.id);
           break;
+        case "startGame":
+          rooms[ws["room"]]
+            .find((roomWs) => roomWs["id"] !== ws["id"])
+            .send(getBasicMessage("gameStarting"));
+          hendleCountdown();
       }
     });
 
@@ -87,7 +93,7 @@ export const configureWss = (server: Server) => {
     const search = () => {
       const startTime = Date.now();
       const maxSearchTime = 5 * 1000;
-      const intervalTime = 1000;
+      const intervalTime = 5000;
       const searchInterval = setInterval(() => {
         const elapsedTime = Date.now() - startTime;
         if (elapsedTime > maxSearchTime) {
@@ -120,6 +126,31 @@ export const configureWss = (server: Server) => {
       if (interval) {
         clearInterval(interval);
       }
+    };
+
+    const hendleCountdown = () => {
+      const startTime = Date.now();
+      const initialCount = 5;
+      const intervalTime = 200;
+      let count = 0;
+      sendToAllUsers(getCountdownMessage(initialCount));
+      const countdownInterval = setInterval(() => {
+        const elapsedTime = (Date.now() - startTime) / 1000;
+        if (elapsedTime - count > 1) {
+          count++;
+          sendToAllUsers(getCountdownMessage(initialCount - count));
+          if (count === initialCount) {
+            return;
+          }
+        }
+      }, intervalTime);
+      rooms[ws["room"]].map(
+        (roomWs) => (roomWs["countdownInterval"] = countdownInterval)
+      );
+    };
+
+    const sendToAllUsers = (message: string) => {
+      rooms[ws["room"]].map((roomWs) => roomWs.send(message));
     };
   });
 };

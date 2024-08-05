@@ -18,4 +18,9 @@ export interface ErrorMsg {
   params: { error: string };
 }
 
-export type BasicRequestMsgType = "otherPlayerLeft" | "initialized";
+export interface CountdownMsg {
+  type: "countdown";
+  params: { count: number };
+}
+
+export type BasicRequestMsgType = "otherPlayerLeft" | "initialized" | "gameStarting";

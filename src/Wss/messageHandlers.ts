@@ -1,5 +1,6 @@
 import {
   BasicRequestMsgType,
+  CountdownMsg,
   CreatedMsg,
   ErrorMsg,
   JoinedMsg,
@@ -47,3 +48,13 @@ export const getJoinedMessage = (roomId: string, playerId: string) => {
 
 export const getBasicMessage = (type: BasicRequestMsgType) =>
   JSON.stringify({ type });
+
+export const getCountdownMessage = (count: number) => {
+  const msg: CountdownMsg = {
+    type: "countdown",
+    params: {
+      count,
+    },
+  };
+  return JSON.stringify(msg);
+};

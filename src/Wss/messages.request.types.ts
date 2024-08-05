@@ -15,5 +15,5 @@ export interface InitMsg {
 
 export type ReqMessage = JoinMsg | BasicMsg | InitMsg;
 export interface BasicMsg {
-  type: "leave" | "search" | "create";
+  type: "leave" | "search" | "create" | "startGame";
 }
