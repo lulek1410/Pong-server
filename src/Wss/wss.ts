@@ -140,7 +140,7 @@ export const configureWss = (server: Server) => {
           count++;
           sendToAllUsers(getCountdownMessage(initialCount - count));
           if (count === initialCount) {
-            return;
+            clearInterval(countdownInterval);
           }
         }
       }, intervalTime);
