@@ -1,11 +1,14 @@
 export interface JoinedMsg {
   type: "joined";
-  params: { roomId: string; otherPlayer: { id: string | null } };
+  params: {
+    roomId: string;
+    otherPlayer: { id: string | null; isGuest: boolean };
+  };
 }
 
 export interface OtherPlayerJoinedMsg {
   type: "otherPlayerJoined";
-  params: { player: { id: string | null } };
+  params: { player: { id: string; isGuest: boolean } };
 }
 
 export interface CreatedMsg {
@@ -23,4 +26,7 @@ export interface CountdownMsg {
   params: { count: number };
 }
 
-export type BasicRequestMsgType = "otherPlayerLeft" | "initialized" | "gameStarting";
+export type BasicRequestMsgType =
+  | "otherPlayerLeft"
+  | "initialized"
+  | "gameStarting";

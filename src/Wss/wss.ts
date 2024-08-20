@@ -35,7 +35,7 @@ export const configureWss = (server: Server) => {
           search();
           break;
         case "init":
-          init(msg.params.id);
+          init(msg.params.id, msg.params.isGuest);
           break;
         case "startGame":
           rooms[ws["room"]]
@@ -71,9 +71,9 @@ export const configureWss = (server: Server) => {
         return;
       }
       rooms[code].push(ws);
-      rooms[code][0].send(getOtherPlayerJoinedMessage(ws["id"]));
+      rooms[code][0].send(getOtherPlayerJoinedMessage(ws["id"], ws["isGuest"]));
       ws["room"] = code;
-      ws.send(getJoinedMessage(code, rooms[code][0]["id"]));
+      ws.send(getJoinedMessage(code, rooms[code][0]["id"], ws["isGuest"]));
     };
 
     const leave = () => {
@@ -92,8 +92,8 @@ export const configureWss = (server: Server) => {
 
     const search = () => {
       const startTime = Date.now();
-      const maxSearchTime = 5 * 1000;
-      const intervalTime = 5000;
+      const maxSearchTime = 60 * 1000;
+      const intervalTime = 2000;
       const searchInterval = setInterval(() => {
         const elapsedTime = Date.now() - startTime;
         if (elapsedTime > maxSearchTime) {
@@ -108,16 +108,19 @@ export const configureWss = (server: Server) => {
           clearInterval(searchInterval);
           const [key, value] = result;
           rooms[key].push(ws);
-          rooms[key][0].send(getOtherPlayerJoinedMessage(ws["id"]));
+          rooms[key][0].send(
+            getOtherPlayerJoinedMessage(ws["id"], ws["isGuest"])
+          );
           ws["room"] = key;
-          ws.send(getJoinedMessage(key, rooms[key][0]["id"]));
+          ws.send(getJoinedMessage(key, rooms[key][0]["id"], ws["isGuest"]));
         }
       }, intervalTime);
       ws["searchInterval"] = searchInterval;
     };
 
-    const init = (id: string | null) => {
+    const init = (id: string, isGuest: boolean) => {
       ws["id"] = id;
+      ws["isGuest"] = isGuest;
       ws.send(getBasicMessage("initialized"));
     };
 

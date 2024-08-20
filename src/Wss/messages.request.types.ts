@@ -10,7 +10,7 @@ export interface JoinMsg {
 
 export interface InitMsg {
   type: "init";
-  params: { id: string };
+  params: { id: string; isGuest: boolean };
 }
 
 export type ReqMessage = JoinMsg | BasicMsg | InitMsg;

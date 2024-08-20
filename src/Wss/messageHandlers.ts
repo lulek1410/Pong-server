@@ -25,22 +25,29 @@ export const getErrorMessage = (errorMessage: string) => {
   return JSON.stringify(msg);
 };
 
-export const getOtherPlayerJoinedMessage = (playerId: string) => {
+export const getOtherPlayerJoinedMessage = (
+  playerId: string,
+  isGuest: boolean
+) => {
   const msg: OtherPlayerJoinedMsg = {
     type: "otherPlayerJoined",
     params: {
-      player: { id: playerId },
+      player: { id: playerId, isGuest },
     },
   };
   return JSON.stringify(msg);
 };
 
-export const getJoinedMessage = (roomId: string, playerId: string) => {
+export const getJoinedMessage = (
+  roomId: string,
+  playerId: string,
+  isGuest: boolean
+) => {
   const msg: JoinedMsg = {
     type: "joined",
     params: {
       roomId,
-      otherPlayer: { id: playerId },
+      otherPlayer: { id: playerId, isGuest },
     },
   };
   return JSON.stringify(msg);
