@@ -38,9 +38,7 @@ export const configureWss = (server: Server) => {
           init(msg.params.id, msg.params.isGuest);
           break;
         case "startGame":
-          rooms[ws["room"]]
-            .find((roomWs) => roomWs["id"] !== ws["id"])
-            .send(getBasicMessage("gameStarting"));
+          sendToAllUsers(getBasicMessage("gameStarting"));
           hendleCountdown();
       }
     });
