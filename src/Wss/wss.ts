@@ -62,7 +62,9 @@ export const configureWss = (server: Server) => {
             const updateData = game.runFrame(player1Offset, player2Offset);
             sendToAllUsers(getUpdateMessage(updateData));
           }, 1000);
-          rooms[ws["room"]].map((roomWs) => (roomWs["gameLoop"] = gameLoop));
+          rooms[ws["room"]].map(
+            (roomWs) => (roomWs["gameLoopInterval"] = gameLoop)
+          );
           break;
       }
     });
@@ -72,7 +74,7 @@ export const configureWss = (server: Server) => {
     });
 
     ws.on("close", () => {
-      clearSearchInterval();
+      clearProvidedInterval("searchInterval");
       console.log("server close ws");
     });
 
@@ -100,7 +102,9 @@ export const configureWss = (server: Server) => {
 
     const leave = () => {
       const room = ws["room"];
-      clearSearchInterval();
+      clearProvidedInterval("searchInterval");
+      clearProvidedInterval("countdownInterval");
+      clearProvidedInterval("gameLoopInterval");
       if (room) {
         rooms[room] = rooms[room].filter((client) => client !== ws);
         ws["room"] = undefined;
@@ -147,8 +151,8 @@ export const configureWss = (server: Server) => {
       ws.send(getBasicMessage("initialized"));
     };
 
-    const clearSearchInterval = () => {
-      const interval = ws["searchInterval"];
+    const clearProvidedInterval = (intervalName: string) => {
+      const interval = ws[intervalName];
       if (interval) {
         clearInterval(interval);
       }
