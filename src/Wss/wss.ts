@@ -9,11 +9,15 @@ import {
   getErrorMessage,
   getJoinedMessage,
   getOtherPlayerJoinedMessage,
+  getUpdateMessage,
 } from "./messageHandlers";
 import { ReqMessage } from "./messages.request.types";
+import { Game } from "./gameLogic";
 
 const maxClients = 2;
 let rooms: { [key: string]: WebSocket[] } = {};
+
+const game = new Game();
 
 export const configureWss = (server: Server) => {
   const wss = new WebSocketServer({ server });
@@ -40,6 +44,26 @@ export const configureWss = (server: Server) => {
         case "startGame":
           sendToAllUsers(getBasicMessage("gameStarting"));
           hendleCountdown();
+          break;
+        case "keyPress":
+          ws["keyPressed"] = msg.params.keyPressed;
+          break;
+        case "initOnlineGame":
+          game.initGame(
+            msg.params.player1Rect,
+            msg.params.player2Rect,
+            msg.params.ballRect,
+            msg.params.gameBoardRect
+          );
+          const gameLoop = setInterval(() => {
+            const [player1Offset, player2Offset] = rooms[ws["room"]].map(
+              (roomWs) => roomWs["keyPressed"]
+            );
+            const updateData = game.runFrame(player1Offset, player2Offset);
+            sendToAllUsers(getUpdateMessage(updateData));
+          }, 1000);
+          rooms[ws["room"]].map((roomWs) => (roomWs["gameLoop"] = gameLoop));
+          break;
       }
     });
 
@@ -113,6 +137,7 @@ export const configureWss = (server: Server) => {
           ws.send(getJoinedMessage(key, rooms[key][0]["id"], ws["isGuest"]));
         }
       }, intervalTime);
+
       ws["searchInterval"] = searchInterval;
     };
 

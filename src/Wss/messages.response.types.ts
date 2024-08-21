@@ -1,8 +1,17 @@
+import { GameFrameResult } from "./gameLogic";
+
 export interface JoinedMsg {
   type: "joined";
   params: {
     roomId: string;
     otherPlayer: { id: string | null; isGuest: boolean };
+  };
+}
+
+export interface UpdateMsg {
+  type: "update";
+  params: {
+    update: GameFrameResult;
   };
 }
 

@@ -1,3 +1,4 @@
+import { GameFrameResult } from "./gameLogic";
 import {
   BasicRequestMsgType,
   CountdownMsg,
@@ -5,6 +6,7 @@ import {
   ErrorMsg,
   JoinedMsg,
   OtherPlayerJoinedMsg,
+  UpdateMsg,
 } from "./messages.response.types";
 
 export const getCreatedMessage = (roomId: string) => {
@@ -61,6 +63,16 @@ export const getCountdownMessage = (count: number) => {
     type: "countdown",
     params: {
       count,
+    },
+  };
+  return JSON.stringify(msg);
+};
+
+export const getUpdateMessage = (updateData: GameFrameResult) => {
+  const msg: UpdateMsg = {
+    type: "update",
+    params: {
+      update: updateData,
     },
   };
   return JSON.stringify(msg);
