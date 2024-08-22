@@ -39,6 +39,12 @@ export class Game {
     this.player2Rect = player2Rect;
     this.ballRect = ballRect;
     this.gameBoardRect = gameBoardRect;
+    this.initialRects = {
+      player1Rect: Object.assign({}, player1Rect),
+      player2Rect: Object.assign({}, player2Rect),
+      ballRect: Object.assign({}, ballRect),
+      gameBoardRect: Object.assign({}, gameBoardRect),
+    };
   }
 
   public runFrame(
@@ -69,6 +75,17 @@ export class Game {
   private player2Rect: Rect = initialRect;
   private ballRect: Rect = initialRect;
   private gameBoardRect: Rect = initialRect;
+  private initialRects: {
+    player1Rect: Rect;
+    player2Rect: Rect;
+    ballRect: Rect;
+    gameBoardRect: Rect;
+  } = {
+    player1Rect: initialRect,
+    player2Rect: initialRect,
+    ballRect: initialRect,
+    gameBoardRect: initialRect,
+  };
 
   private updateRects = () => {
     const ballXOffsetPx = this.calculateOffsetInPx(this.ballOffset.x, "x");
@@ -206,138 +223,10 @@ export class Game {
     this.player2Offset = 0;
     this.ballOffset = { x: 0, y: 0 };
     this.ballPhi = 0;
+    console.log("initial ballRect", this.initialRects.ballRect);
+    this.player1Rect = Object.assign({}, this.initialRects.player1Rect);
+    this.player2Rect = Object.assign({}, this.initialRects.player2Rect);
+    this.ballRect = Object.assign({}, this.initialRects.ballRect);
+    this.gameBoardRect = Object.assign({}, this.initialRects.gameBoardRect);
   };
 }
-
-// let points = { player1: 0, player2: 0 };
-// let player1Offset = 0;
-// let player2Offset = 0;
-// let ballOffset = { x: 0, y: 0 };
-
-// export const runGameFrame = (): GameFrameResult => {
-//   let ballVelocityX = 2;
-//   let ballVelocityY = 2;
-//   const maxPhi = 75;
-
-//   const offsetModifier = 2.5;
-//   const offsetLimit =
-//     50 - ((this.player1Rect.height / this.gameBoardRect.height) * 100) / 2;
-
-//   const calculateOffsetInPx = (offset: number, direction: "x" | "y") => {
-//     return (
-//       (offset / 100) *
-//       (direction === "y" ? this.gameBoardRect.height : this.gameBoardRect.width)
-//     );
-//   };
-
-//   const handlePlayerMovement = (
-//     offsetModifier: number,
-//     offsetLimit: number
-//   ) => {
-//     if (upKeys.includes(ws1["keyPressed"]) && player1Offset > -offsetLimit) {
-//       player1Offset = Math.max(player1Offset - offsetModifier, -offsetLimit);
-//     }
-//     if (downKeys.includes(ws1["keyPressed"]) && player1Offset < offsetLimit) {
-//       player1Offset = Math.min(player1Offset + offsetModifier, offsetLimit);
-//     }
-//     if (upKeys.includes(ws2["keyPressed"]) && player2Offset > -offsetLimit) {
-//       player2Offset = Math.max(player2Offset - offsetModifier, -offsetLimit);
-//     }
-//     if (downKeys.includes(ws2["keyPressed"]) && player2Offset < offsetLimit) {
-//       player2Offset = Math.min(player2Offset + offsetModifier, offsetLimit);
-//     }
-//   };
-
-//   const resetGame = () => {
-//     player1Offset = 0;
-//     player2Offset = 0;
-//     ballOffset = { x: 0, y: 0 };
-//     this.ballPhi = 0;
-//   };
-
-//   const calculatePhi = (paddleRect: Rect): number => {
-//     const paddleCenter =
-//       paddleRect.top +
-//       (paddleRect.height + this.ballRect.height) / 2 -
-//       this.ballRect.height / 2;
-//     const ballCenter = this.ballRect.top + this.ballRect.height / 2;
-//     const distanceFromCenter = ballCenter - paddleCenter;
-//     return Math.abs(
-//       (maxPhi * distanceFromCenter) /
-//         (paddleRect.height / 2 + this.ballRect.height / 2)
-//     );
-//   };
-
-//   const checkScore = () => {
-//     if (this.ballRect.left <= this.gameBoardRect.left) {
-//       resetGame();
-//       points = {
-//         player1: points.player1,
-//         player2: points.player2 + 1,
-//       };
-//     } else if (this.ballRect.right >= this.gameBoardRect.right) {
-//       resetGame();
-//       points = {
-//         player1: points.player1 + 1,
-//         player2: points.player2,
-//       };
-//     }
-//   };
-
-//   checkPaddleCollision = () => {
-//     if (
-//       this.ballRect.left <= this.player1Rect.right &&
-//       this.ballRect.top <= this.player1Rect.bottom &&
-//       this.ballRect.bottom >= this.player1Rect.top &&
-//       this.ballRect.left >= this.player1Rect.left &&
-//       this.ballRect.left >= this.player1Rect.right - this.player1Rect.width / 2
-//     ) {
-//       this.ballPhi = calculatePhi(this.player1Rect);
-//       ballVelocityX = -1 * ballVelocityX;
-//     } else if (
-//       this.ballRect.right >= this.player2Rect.left &&
-//       this.ballRect.top <= this.player2Rect.bottom &&
-//       this.ballRect.bottom >= this.player2Rect.top &&
-//       this.ballRect.right <= this.player2Rect.right &&
-//       this.ballRect.right <= this.player2Rect.left + this.player2Rect.width / 2
-//     ) {
-//       this.ballPhi = calculatePhi(this.player2Rect);
-//       ballVelocityX = -1 * ballVelocityX;
-//     }
-//   };
-
-//   const checkBoardCollision = () => {
-//     if (
-//       this.ballRect.top <= this.gameBoardRect.top ||
-//       this.ballRect.bottom >= this.gameBoardRect.bottom
-//     ) {
-//       ballVelocityY = -1 * ballVelocityY;
-//     }
-//   };
-
-//   const handleBallMovement = async () => {
-//     checkScore();
-//     checkPaddleCollision();
-//     checkBoardCollision();
-//     ballOffset = {
-//       x: ballOffset.x + ballVelocityX,
-//       y: Math.max(
-//         Math.min(
-//           ballOffset.y + ballVelocityY * Math.abs(Math.sin(this.ballPhi)),
-//           48.7
-//         ),
-//         -48.7
-//       ),
-//     };
-//   };
-
-//   handleBallMovement();
-//   handlePlayerMovement(offsetModifier, offsetLimit);
-
-//   return {
-//     points,
-//     player1Offset,
-//     player2Offset,
-//     ballOffset,
-//   };
-// };

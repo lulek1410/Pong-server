@@ -71,9 +71,7 @@ export const getCountdownMessage = (count: number) => {
 export const getUpdateMessage = (updateData: GameFrameResult) => {
   const msg: UpdateMsg = {
     type: "update",
-    params: {
-      update: updateData,
-    },
+    params: updateData,
   };
   return JSON.stringify(msg);
 };

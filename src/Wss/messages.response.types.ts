@@ -10,9 +10,7 @@ export interface JoinedMsg {
 
 export interface UpdateMsg {
   type: "update";
-  params: {
-    update: GameFrameResult;
-  };
+  params: GameFrameResult;
 }
 
 export interface OtherPlayerJoinedMsg {
